@@ -13,7 +13,7 @@ class ClienteModel(Base):
     prioridade = Column(String, nullable=False)
 
 
-class EventoProcessado(Base):
+class EventoProcessadoModel(Base):
     __tablename__ = "eventos_processados"
 
     event_id = Column(Integer, primary_key=True, index=True)
