@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Numeric, DateTime
 from app.models.database import Base
 
 
-class ClientModel(Base):
+class Client(Base):
     __tablename__ = "clientes"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -14,7 +14,7 @@ class ClientModel(Base):
     prioridade = Column(String, nullable=True)
 
 
-class ProcessedEventModel(Base):
+class ProcessedEvent(Base):
     __tablename__ = "eventos_processados"
 
     event_id = Column(Integer, primary_key=True, index=True)

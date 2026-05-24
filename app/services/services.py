@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
-from app.controllers.schemas import ClientCreateSchema
-from app.models.models import ClientModel
+from fastapi import HTTPException, status
+from app.controllers.schemas import ClientCreateSchema, WebhookPipefySchema
+from app.models.models import Client, ProcessedEvent
 from app.integrations.pipefy_client import PipefyClient
 
 
@@ -10,9 +10,7 @@ class ClientService:
     @staticmethod
     def create_client(db: Session, payload: ClientCreateSchema):
         existing_client = (
-            db.query(ClientModel)
-            .filter(ClientModel.email == payload.cliente_email)
-            .first()
+            db.query(Client).filter(Client.email == payload.cliente_email).first()
         )
         if existing_client:
             raise HTTPException(
@@ -20,7 +18,7 @@ class ClientService:
                 detail="Um cliente com este e-mail já está cadastrado.",
             )
 
-        new_client = ClientModel(
+        new_client = Client(
             nome=payload.cliente_nome,
             email=payload.cliente_email,
             tipo_solicitacao=payload.tipo_solicitacao,
@@ -36,9 +34,58 @@ class ClientService:
             email=payload.cliente_email,
             valor_patrimonio=payload.valor_patrimonio,
         )
-        
+
         print(f"\n--- Mutation enviada para createCard ---\n{payload_graphql}\n")
-        
+
         return new_client
-    
- 
+
+
+class WebhookService:
+
+    @staticmethod
+    def process_update_card(db: Session, payload: WebhookPipefySchema):
+
+        # verifica se o evento já foi processado
+        existing_event = (
+            db.query(ProcessedEvent)
+            .filter(ProcessedEvent.event_id == payload.event_id)
+            .first()
+        )
+        if existing_event:
+            raise HTTPException(
+                status_code=400, detail=f"Evento já processado. '{payload.event_id}'"
+            )
+
+        new_event = ProcessedEvent(
+            event_id=payload.event_id, processed_at=payload.timestamp
+        )
+        db.add(new_event)
+
+        client = db.query(Client).filter(Client.email == payload.cliente_email).first()
+        if not client:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Cliente informado no webhook não foi localizado no banco local.",
+            )
+
+        # Definição da prioridade com base no valor do patrimônio
+        if client.valor_patrimonio >= 200000:
+            prioridade_calculada = "prioridade_alta"
+        else:
+            prioridade_calculada = "prioridade_normal"
+
+        client.status = "Processado"
+        client.prioridade = prioridade_calculada
+
+        db.commit()
+
+        payload_graphql = PipefyClient.simulate_update_card_field(
+            card_id=payload.card_id, prioridade=prioridade_calculada
+        )
+
+        print(
+            f"\n--- [PIPEFY INTERACTION] Mutation enviada para updateCardField ---\n{payload_graphql}\n"
+        )
+
+        return {"message": "Webhook processado", "prioridade": prioridade_calculada}
