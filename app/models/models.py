@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, Numeric, DateTime
 from app.models.database import Base
 
-class ClienteModel(Base):
+class ClientModel(Base):
     __tablename__ = "clientes"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -13,7 +13,7 @@ class ClienteModel(Base):
     prioridade = Column(String, nullable=False)
 
 
-class EventoProcessadoModel(Base):
+class ProcessedEventModel(Base):
     __tablename__ = "eventos_processados"
 
     event_id = Column(Integer, primary_key=True, index=True)

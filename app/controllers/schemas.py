@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
-class ClienteCreateSchema(BaseModel):
+class ClientCreateSchema(BaseModel):
     cliente_nome: str
     cliente_email: EmailStr # classe de validação de email do pydantic
     tipo_solicitacao: str
