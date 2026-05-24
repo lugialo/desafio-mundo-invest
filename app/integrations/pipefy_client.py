@@ -32,3 +32,23 @@ class PipefyClient:
         return json.dumps(
             {"query": mutation, "variables": variables}, indent=2, ensure_ascii=False
         )
+        
+    @staticmethod
+    def simulate_update_card_field(card_id: str, prioridade: str) -> str:
+        mutation = """
+        mutation UpdateCardField($input: UpdateCardFieldInput!) {
+          updateCardField(input: $input) {
+            card {
+              id
+            }
+          }
+        }
+        """
+        variables = {
+            "input": {
+                "card_id": card_id,
+                "field_id": "prioridade",
+                "new_value": prioridade
+            }
+        }
+        return json.dumps({"query": mutation, "variables": variables}, indent=2, ensure_ascii=False)

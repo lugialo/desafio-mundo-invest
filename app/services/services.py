@@ -40,3 +40,5 @@ class ClientService:
         print(f"\n--- Mutation enviada para createCard ---\n{payload_graphql}\n")
         
         return new_client
+    
+ 
