@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, Numeric, DateTime
 from app.models.database import Base
 
+
 class ClientModel(Base):
     __tablename__ = "clientes"
 
@@ -8,9 +9,9 @@ class ClientModel(Base):
     nome = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     tipo_solicitacao = Column(String, nullable=False)
-    valor_patrimomio = Column(Numeric(10, 2), nullable=False)
+    valor_patrimonio = Column(Numeric(10, 2), nullable=False)
     status = Column(String, default="Aguardando Análise")
-    prioridade = Column(String, nullable=False)
+    prioridade = Column(String, nullable=True)
 
 
 class ProcessedEventModel(Base):
