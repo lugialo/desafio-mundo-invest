@@ -17,5 +17,5 @@ class Client(Base):
 class ProcessedEvent(Base):
     __tablename__ = "eventos_processados"
 
-    event_id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(String, primary_key=True, index=True)
     processed_at = Column(DateTime)

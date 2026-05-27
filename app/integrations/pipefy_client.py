@@ -34,21 +34,66 @@ class PipefyClient:
         )
         
     @staticmethod
-    def simulate_update_card_field(card_id: str, prioridade: str) -> str:
-        mutation = """
+    def simulate_update_card_fields(card_id: str, status: str, prioridade: str) -> str:
+        batch_mutation = """
+        mutation UpdateFieldsValues($input: UpdateFieldsValuesInput!) {
+          updateFieldsValues(input: $input) {
+            success
+            clientMutationId
+          }
+        }
+        """
+        batch_variables = {
+            "input": {
+                "nodeId": card_id,
+                "values": [
+                    {"fieldId": "status", "value": status},
+                    {"fieldId": "prioridade", "value": prioridade}
+                ]
+            }
+        }
+
+        individual_mutation = """
         mutation UpdateCardField($input: UpdateCardFieldInput!) {
           updateCardField(input: $input) {
+            success
             card {
               id
             }
           }
         }
         """
-        variables = {
+        individual_variables_status = {
+            "input": {
+                "card_id": card_id,
+                "field_id": "status",
+                "new_value": status
+            }
+        }
+        individual_variables_prioridade = {
             "input": {
                 "card_id": card_id,
                 "field_id": "prioridade",
                 "new_value": prioridade
             }
         }
-        return json.dumps({"query": mutation, "variables": variables}, indent=2, ensure_ascii=False)
+
+        payloads = {
+            "preferred_batch_mutation": {
+                "query": batch_mutation.strip(),
+                "variables": batch_variables
+            },
+            "alternative_individual_mutations": [
+                {
+                    "description": "Atualiza o status do cliente",
+                    "query": individual_mutation.strip(),
+                    "variables": individual_variables_status
+                },
+                {
+                    "description": "Atualiza a prioridade calculada",
+                    "query": individual_mutation.strip(),
+                    "variables": individual_variables_prioridade
+                }
+            ]
+        }
+        return json.dumps(payloads, indent=2, ensure_ascii=False)

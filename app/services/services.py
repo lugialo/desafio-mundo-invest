@@ -53,7 +53,7 @@ class WebhookService:
         )
         if existing_event:
             raise HTTPException(
-                status_code=400, detail=f"Evento já processado. '{payload.event_id}'"
+                status_code=409, detail=f"Bloqueado: Evento já processado. '{payload.event_id}'"
             )
 
         new_event = ProcessedEvent(
@@ -80,12 +80,12 @@ class WebhookService:
 
         db.commit()
 
-        payload_graphql = PipefyClient.simulate_update_card_field(
-            card_id=payload.card_id, prioridade=prioridade_calculada
+        payload_graphql = PipefyClient.simulate_update_card_fields(
+            card_id=payload.card_id, status="Processado", prioridade=prioridade_calculada
         )
 
         print(
-            f"\n--- [PIPEFY INTERACTION] Mutation enviada para updateCardField ---\n{payload_graphql}\n"
+            f"\n--- [PIPEFY INTERACTION] Mutations/Payloads Pipefy ---\n{payload_graphql}\n"
         )
 
-        return {"message": "Webhook processado", "prioridade": prioridade_calculada}
+        return {"message": "Webhook processado", "prioridade_definida": prioridade_calculada}
