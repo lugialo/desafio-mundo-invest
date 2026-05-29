@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from app.controllers.controllers import create_client, updated_card_webhook
 from app.controllers.schemas import ClientCreateSchema, WebhookPipefySchema
 from app.models.database import engine, Base, get_db
-from app.models import models  # noqa: F401
 
 Base.metadata.create_all(bind=engine)
 
