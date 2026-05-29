@@ -82,7 +82,7 @@ def test_should_apply_correct_priority(client, patrimonio, prioridade_esperada):
 
 
 # Bloqueio de processamento caso o event_id do webhook seja duplicado.
-def test_deve_bloquear_processamento_de_webhook_com_event_id_duplicado(client):
+def test_should_block_process_duplicate_event_id(client):
     email = "teste@gmail.com"
     client.post(
         "/clientes",
