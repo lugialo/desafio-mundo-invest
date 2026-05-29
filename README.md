@@ -96,3 +96,39 @@ curl -X POST http://127.0.0.1:8000/webhooks/pipefy/card-updated \
 ```
 
 ---
+
+## Visão de Produção (AWS)
+
+### Diagrama de arquitetura
+
+<img width="2758" height="1293" alt="Untitled" src="https://github.com/user-attachments/assets/8636b856-7b4a-4b8e-ba2e-d33aac9f1e6b" />
+
+
+---
+
+### Fluxo 1 — `POST /clientes`
+
+O **API Gateway** recebe a requisição e a repassa diretamente para o **`CreateClientLambda`**, uma função Lambda responsável por:
+
+- Validar o payload e o formato do e-mail
+- Persistir o cliente no **RDS PostgreSQL** via **RDS Proxy**
+- Montar a mutation `createCard` do Pipefy
+
+---
+
+### Fluxo 2 — `POST /webhooks/pipefy/card-updated`
+
+O **API Gateway** recebe o evento do Pipefy e enfileira no **SQS** antes de acionar o **`PipefyWebhookLambda`**. Essa etapa de filas tem dois benefícios diretos: absorve picos de volume sem perder eventos e garante reprocessamento automático em caso de falha do Lambda.
+
+O `PipefyWebhookLambda` executa a seguinte sequência:
+
+1. **Idempotência**: consulta o **DynamoDB** pelo `event_id`. Se já existir, retorna `HTTP 409` sem processar nada.
+2. **Gravação atômica**: registra o `event_id` no DynamoDB com tempo de vida de 30 dias.
+3. **Regra de prioridade**: busca o cliente no **RDS PostgreSQL** pelo `cliente_email` e calcula:
+   - `valor_patrimonio >= 200.000` → `prioridade_alta`
+   - `valor_patrimonio < 200.000` → `prioridade_normal`
+4. **Persistência**: atualiza o status do cliente para `"Processado"` e salva a prioridade no RDS.
+5. **Pipefy**: monta a mutation `updateCardField`.
+
+---
+
